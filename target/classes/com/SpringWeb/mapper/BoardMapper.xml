@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.SpringWeb.mapper.BoardMapper">
+	<sql id="searchCondition">
+		<where>
+			<trim prefixOverrides="OR">
+				<foreach collection="typeCollection" item="t">
+					<trim prefix="OR">
+						<choose>
+							<when test="t=='T'.toString()">
+								title like concat('%', #{keyword}, '%')
+							</when>
+							<when test="t=='C'.toString()">
+								content like concat('%', #{keyword}, '%')
+							</when>
+							<when test="t=='W'.toString()">
+								writer like concat('%', #{keyword}, '%')
+							</when>
+						</choose>
+					</trim>
+				</foreach>
+			</trim>
+		</where>
+	</sql>
+	
+	<resultMap type="com.SpringWeb.domain.BoardDTO" id="boardMap">
+		<id property="bno" column="bno" />
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="writer" column="writer" />
+		<result property="regdate" column="regdate" />
+		<result property="readCount" column="readCount" />
+		<result property="replyCnt" column="replyCnt" />
+		<collection property="attachList" resultMap="attMap" />
+	</resultMap>
+	
+	<resultMap type="com.SpringWeb.domain.BoardAttachDTO" id="attMap">
+		<result property="uuid" column="uuid"/>
+		<result property="uploadPath" column="uploadPath"/>
+		<result property="fileName" column="fileName"/>
+		<result property="bno" column="bno"/>
+		<result property="fileType" column="fileType"/>
+	</resultMap>
+	
+	<!-- 전체 게시물 조회 -->
+	<select id="getList" resultType="com.SpringWeb.domain.BoardDTO">
+		select * from board_tbl
+		<include refid="searchCondition" />
+		order by bno desc limit #{start}, #{amount}
+	</select>
+	
+	<!-- 전체 개시물 개수 조회 -->
+	<select id="totalCount" resultType="int">
+		select count(bno) from board_tbl
+		<include refid="searchCondition" />
+	</select>
+	
+	<!-- 게시물 조회 -->
+	<select id="get" resultMap="boardMap">
+		select * from board_tbl a left outer join tb_attach b on a.bno = b.bno where a.bno=#{bno}
+	</select>
+	
+	<!-- 게시물 등록 -->
+	<insert id="insert">
+		<selectKey keyProperty="bno" order="AFTER"
+			resultType="int">
+			select LAST_INSERT_ID()
+		</selectKey>
+		insert into board_tbl(title, content, writer) values(#{title}, #{content}, #{writer})
+	</insert>
+	
+	<!-- 게시물 수정 -->
+	<update id="update">
+		update board_tbl set title = #{title}, content = #{content}, writer = #{writer} where bno = #{bno}
+	</update>
+	
+	<!-- 게시물 삭제 -->
+	<delete id="delete">
+		delete from board_tbl where bno=#{bno}
+	</delete>
+	
+	<!-- 게시물 조회수 -->
+	<update id="readCount">
+		update board_tbl set readcount = readcount+1 where bno = #{bno}
+	</update>
+	
+	<update id="updateReplyCnt">
+		update board_tbl set replyCnt = replyCnt + #{amount} where bno = #{bno}
+	</update>
+</mapper>

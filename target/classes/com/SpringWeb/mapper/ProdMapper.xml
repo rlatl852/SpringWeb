@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.SpringWeb.mapper.ProdMapper">
+	<select id="getGroupName" resultType="String">
+		select group_name from product_tbl where group_name != "" AND food_cd like concat('%', 'p', '%') group by group_name
+	</select>
+	
+	<select id="prodList" resultType="com.SpringWeb.domain.ProductDTO">
+		select * from product_tbl
+		<where>
+			food_cd like concat('%', 'p', '%')
+			<if test="pDto.group_name != null and pDto.group_name != ''">AND group_name like concat('%' ,#{pDto.group_name}, '%')</if>
+			<if test="pDto.maker_name != null and pDto.maker_name != ''">AND maker_name like concat('%' ,#{pDto.maker_name}, '%')</if>
+			<if test="pDto.desc_kor != null and pDto.desc_kor != ''">AND desc_kor like concat('%' ,#{pDto.desc_kor}, '%')</if>
+		</where>
+		order by pno desc limit #{criteria.start}, #{criteria.amount}
+	</select>
+	
+	<select id="totalCount" resultType="int">
+		select count(pno) from product_tbl
+		<where>
+			food_cd like concat('%', 'p', '%')
+			<if test="group_name != null and group_name != ''">AND group_name like concat('%' ,#{group_name}, '%')</if>
+			<if test="maker_name != null and maker_name != ''">AND maker_name like concat('%' ,#{maker_name}, '%')</if>
+			<if test="desc_kor != null and desc_kor != ''">AND desc_kor like concat('%' ,#{desc_kor}, '%')</if>
+		</where>
+	</select>
+	
+	<select id="getProd" resultType="com.SpringWeb.domain.ProductDTO">
+		select * from product_tbl where food_cd = #{food_cd}
+	</select>
+</mapper>
